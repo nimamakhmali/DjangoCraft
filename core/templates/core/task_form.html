@@ -1,0 +1,337 @@
+{% extends 'core/base.html' %}
+
+{% block title %}
+{% if form.instance.pk %}Edit Task{% else %}New Task{% endif %} - DjangoCraft
+{% endblock %}
+
+{% block page_title %}
+{% if form.instance.pk %}Edit Task{% else %}New Task{% endif %}
+{% endblock %}
+
+{% block page_actions %}
+<a href="{% url 'core:task_list' %}" class="btn btn-outline-secondary">
+    <i class="bi bi-arrow-left"></i> Back to Tasks
+</a>
+{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="bi bi-list-task"></i>
+                    {% if form.instance.pk %}Edit Task{% else %}Create New Task{% endif %}
+                </h5>
+            </div>
+            <div class="card-body">
+                <form method="post" novalidate>
+                    {% csrf_token %}
+                    
+                    <!-- Title -->
+                    <div class="mb-3">
+                        <label for="{{ form.title.id_for_label }}" class="form-label">
+                            <i class="bi bi-type"></i> Task Title *
+                        </label>
+                        {{ form.title }}
+                        {% if form.title.errors %}
+                        <div class="invalid-feedback d-block">
+                            {% for error in form.title.errors %}
+                            {{ error }}
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+                        {% if form.title.help_text %}
+                        <div class="form-text">{{ form.title.help_text }}</div>
+                        {% endif %}
+                    </div>
+                    
+                    <!-- Description -->
+                    <div class="mb-3">
+                        <label for="{{ form.description.id_for_label }}" class="form-label">
+                            <i class="bi bi-text-paragraph"></i> Description *
+                        </label>
+                        {{ form.description }}
+                        {% if form.description.errors %}
+                        <div class="invalid-feedback d-block">
+                            {% for error in form.description.errors %}
+                            {{ error }}
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+                        {% if form.description.help_text %}
+                        <div class="form-text">{{ form.description.help_text }}</div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="row">
+                        <!-- Project -->
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.project.id_for_label }}" class="form-label">
+                                <i class="bi bi-folder"></i> Project *
+                            </label>
+                            {{ form.project }}
+                            {% if form.project.errors %}
+                            <div class="invalid-feedback d-block">
+                                {% for error in form.project.errors %}
+                                {{ error }}
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+                        
+                        <!-- Assigned To -->
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.assigned_to.id_for_label }}" class="form-label">
+                                <i class="bi bi-person"></i> Assigned To
+                            </label>
+                            {{ form.assigned_to }}
+                            {% if form.assigned_to.errors %}
+                            <div class="invalid-feedback d-block">
+                                {% for error in form.assigned_to.errors %}
+                                {{ error }}
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <!-- Status -->
+                        <div class="col-md-4 mb-3">
+                            <label for="{{ form.status.id_for_label }}" class="form-label">
+                                <i class="bi bi-flag"></i> Status
+                            </label>
+                            {{ form.status }}
+                            {% if form.status.errors %}
+                            <div class="invalid-feedback d-block">
+                                {% for error in form.status.errors %}
+                                {{ error }}
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+                        
+                        <!-- Priority -->
+                        <div class="col-md-4 mb-3">
+                            <label for="{{ form.priority.id_for_label }}" class="form-label">
+                                <i class="bi bi-exclamation-triangle"></i> Priority
+                            </label>
+                            {{ form.priority }}
+                            {% if form.priority.errors %}
+                            <div class="invalid-feedback d-block">
+                                {% for error in form.priority.errors %}
+                                {{ error }}
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+                        
+                        <!-- Due Date -->
+                        <div class="col-md-4 mb-3">
+                            <label for="{{ form.due_date.id_for_label }}" class="form-label">
+                                <i class="bi bi-calendar-event"></i> Due Date *
+                            </label>
+                            {{ form.due_date }}
+                            {% if form.due_date.errors %}
+                            <div class="invalid-feedback d-block">
+                                {% for error in form.due_date.errors %}
+                                {{ error }}
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <!-- Estimated Hours -->
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.estimated_hours.id_for_label }}" class="form-label">
+                                <i class="bi bi-clock"></i> Estimated Hours
+                            </label>
+                            {{ form.estimated_hours }}
+                            {% if form.estimated_hours.errors %}
+                            <div class="invalid-feedback d-block">
+                                {% for error in form.estimated_hours.errors %}
+                                {{ error }}
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                            {% if form.estimated_hours.help_text %}
+                            <div class="form-text">{{ form.estimated_hours.help_text }}</div>
+                            {% endif %}
+                        </div>
+                        
+                        <!-- Actual Hours -->
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.actual_hours.id_for_label }}" class="form-label">
+                                <i class="bi bi-clock-history"></i> Actual Hours
+                            </label>
+                            {{ form.actual_hours }}
+                            {% if form.actual_hours.errors %}
+                            <div class="invalid-feedback d-block">
+                                {% for error in form.actual_hours.errors %}
+                                {{ error }}
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                            {% if form.actual_hours.help_text %}
+                            <div class="form-text">{{ form.actual_hours.help_text }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <!-- Tags -->
+                    <div class="mb-3">
+                        <label for="tags" class="form-label">
+                            <i class="bi bi-tags"></i> Tags
+                        </label>
+                        <input type="text" id="tags" name="tags" class="form-control" 
+                               placeholder="Enter tags separated by commas (e.g., frontend, bug, urgent)"
+                               value="{% if form.instance.tags %}{{ form.instance.tags|join:', ' }}{% endif %}">
+                        <div class="form-text">Enter tags separated by commas to help categorize and filter tasks.</div>
+                    </div>
+                    
+                    <!-- Form Errors -->
+                    {% if form.non_field_errors %}
+                    <div class="alert alert-danger">
+                        <i class="bi bi-exclamation-triangle"></i>
+                        {% for error in form.non_field_errors %}
+                        {{ error }}
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                    
+                    <!-- Submit Buttons -->
+                    <div class="d-flex justify-content-between">
+                        <a href="{% url 'core:task_list' %}" class="btn btn-outline-secondary">
+                            <i class="bi bi-x-circle"></i> Cancel
+                        </a>
+                        <button type="submit" class="btn btn-success">
+                            <i class="bi bi-check-circle"></i>
+                            {% if form.instance.pk %}Update Task{% else %}Create Task{% endif %}
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        
+        <!-- Help Card -->
+        <div class="card mt-4">
+            <div class="card-header">
+                <h6 class="mb-0"><i class="bi bi-info-circle"></i> Tips</h6>
+            </div>
+            <div class="card-body">
+                <ul class="mb-0">
+                    <li>Choose the appropriate project for this task.</li>
+                    <li>Assign the task to a team member who will be responsible for it.</li>
+                    <li>Set realistic due dates and estimated hours.</li>
+                    <li>Use tags to help categorize and search for tasks later.</li>
+                    <li>Update actual hours as you work on the task to track time.</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+/* Custom styling for form fields */
+.form-control, .form-select {
+    border-radius: 0.5rem;
+    border: 1px solid #dee2e6;
+    padding: 0.75rem;
+    transition: all 0.3s ease;
+}
+
+.form-control:focus, .form-select:focus {
+    border-color: var(--success-color);
+    box-shadow: 0 0 0 0.2rem rgba(25, 135, 84, 0.25);
+}
+
+.form-label {
+    font-weight: 500;
+    color: #495057;
+}
+
+.form-label i {
+    margin-right: 0.5rem;
+    color: var(--success-color);
+}
+
+/* Date input styling */
+input[type="datetime-local"] {
+    padding: 0.75rem;
+    border-radius: 0.5rem;
+    border: 1px solid #dee2e6;
+}
+
+/* Textarea styling */
+textarea.form-control {
+    min-height: 120px;
+    resize: vertical;
+}
+
+/* Number input styling */
+input[type="number"] {
+    padding: 0.75rem;
+    border-radius: 0.5rem;
+    border: 1px solid #dee2e6;
+}
+
+/* Tags input styling */
+#tags {
+    background-color: #f8f9fa;
+}
+
+#tags:focus {
+    background-color: #fff;
+}
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Auto-fill due date if not set (7 days from now)
+document.addEventListener('DOMContentLoaded', function() {
+    const dueDateField = document.getElementById('{{ form.due_date.id_for_label }}');
+    if (!dueDateField.value) {
+        const now = new Date();
+        now.setDate(now.getDate() + 7);
+        
+        const year = now.getFullYear();
+        const month = String(now.getMonth() + 1).padStart(2, '0');
+        const day = String(now.getDate()).padStart(2, '0');
+        const hours = String(now.getHours()).padStart(2, '0');
+        const minutes = String(now.getMinutes()).padStart(2, '0');
+        
+        dueDateField.value = `${year}-${month}-${day}T${hours}:${minutes}`;
+    }
+});
+
+// Project change handler - update assigned_to options
+document.getElementById('{{ form.project.id_for_label }}').addEventListener('change', function() {
+    const projectId = this.value;
+    const assignedToField = document.getElementById('{{ form.assigned_to.id_for_label }}');
+    
+    if (projectId) {
+        // You can implement AJAX to fetch project members here
+        console.log('Project changed to:', projectId);
+    }
+});
+
+// Tags input enhancement
+document.getElementById('tags').addEventListener('input', function() {
+    const tags = this.value.split(',').map(tag => tag.trim()).filter(tag => tag);
+    const uniqueTags = [...new Set(tags)];
+    this.value = uniqueTags.join(', ');
+});
+
+// Initialize tooltips
+var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+    return new bootstrap.Tooltip(tooltipTriggerEl);
+});
+</script>
+{% endblock %}
