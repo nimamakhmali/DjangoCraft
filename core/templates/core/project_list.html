@@ -1,0 +1,239 @@
+{% extends 'core/base.html' %}
+
+{% block title %}Projects - DjangoCraft{% endblock %}
+
+{% block page_title %}Projects{% endblock %}
+
+{% block page_actions %}
+<a href="{% url 'core:project_create' %}" class="btn btn-primary">
+    <i class="bi bi-plus-circle"></i> New Project
+</a>
+{% endblock %}
+
+{% block content %}
+<!-- Filters -->
+<div class="card mb-4">
+    <div class="card-body">
+        <form method="get" class="row g-3">
+            <div class="col-md-3">
+                <label for="status" class="form-label">Status</label>
+                <select name="status" id="status" class="form-select">
+                    <option value="">All Statuses</option>
+                    <option value="planning" {% if status_filter == 'planning' %}selected{% endif %}>Planning</option>
+                    <option value="active" {% if status_filter == 'active' %}selected{% endif %}>Active</option>
+                    <option value="on_hold" {% if status_filter == 'on_hold' %}selected{% endif %}>On Hold</option>
+                    <option value="completed" {% if status_filter == 'completed' %}selected{% endif %}>Completed</option>
+                    <option value="cancelled" {% if status_filter == 'cancelled' %}selected{% endif %}>Cancelled</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label for="priority" class="form-label">Priority</label>
+                <select name="priority" id="priority" class="form-select">
+                    <option value="">All Priorities</option>
+                    <option value="low" {% if priority_filter == 'low' %}selected{% endif %}>Low</option>
+                    <option value="medium" {% if priority_filter == 'medium' %}selected{% endif %}>Medium</option>
+                    <option value="high" {% if priority_filter == 'high' %}selected{% endif %}>High</option>
+                    <option value="urgent" {% if priority_filter == 'urgent' %}selected{% endif %}>Urgent</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label for="search" class="form-label">Search</label>
+                <input type="text" name="search" id="search" class="form-control" placeholder="Search projects..." value="{{ request.GET.search }}">
+            </div>
+            <div class="col-md-3 d-flex align-items-end">
+                <button type="submit" class="btn btn-primary me-2">
+                    <i class="bi bi-search"></i> Filter
+                </button>
+                <a href="{% url 'core:project_list' %}" class="btn btn-outline-secondary">
+                    <i class="bi bi-arrow-clockwise"></i> Clear
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Projects Grid -->
+{% if projects %}
+<div class="row">
+    {% for project in projects %}
+    <div class="col-lg-6 col-xl-4 mb-4">
+        <div class="card h-100">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">{{ project.title }}</h5>
+                <div class="dropdown">
+                    <button class="btn btn-sm btn-outline-light" type="button" data-bs-toggle="dropdown">
+                        <i class="bi bi-three-dots-vertical"></i>
+                    </button>
+                    <ul class="dropdown-menu">
+                        <li><a class="dropdown-item" href="{% url 'core:project_detail' project.pk %}">
+                            <i class="bi bi-eye"></i> View
+                        </a></li>
+                        {% if user.role == 'admin' or project.owner == user %}
+                        <li><a class="dropdown-item" href="{% url 'core:project_update' project.pk %}">
+                            <i class="bi bi-pencil"></i> Edit
+                        </a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item text-danger" href="{% url 'core:project_delete' project.pk %}">
+                            <i class="bi bi-trash"></i> Delete
+                        </a></li>
+                        {% endif %}
+                    </ul>
+                </div>
+            </div>
+            <div class="card-body">
+                <p class="card-text text-muted">{{ project.description|truncatewords:20 }}</p>
+                
+                <!-- Project Stats -->
+                <div class="row text-center mb-3">
+                    <div class="col-4">
+                        <div class="stats-number text-primary">{{ project.tasks.count }}</div>
+                        <small class="text-muted">Tasks</small>
+                    </div>
+                    <div class="col-4">
+                        <div class="stats-number text-success">{{ project.tasks.filter.status='completed'|length }}</div>
+                        <small class="text-muted">Completed</small>
+                    </div>
+                    <div class="col-4">
+                        <div class="stats-number text-warning">{{ project.tasks.filter.status='in_progress'|length }}</div>
+                        <small class="text-muted">In Progress</small>
+                    </div>
+                </div>
+                
+                <!-- Progress Bar -->
+                <div class="mb-3">
+                    <div class="d-flex justify-content-between align-items-center mb-1">
+                        <small class="text-muted">Progress</small>
+                        <small class="text-muted">{{ project.progress }}%</small>
+                    </div>
+                    <div class="progress">
+                        <div class="progress-bar" role="progressbar" style="width: {{ project.progress }}%"></div>
+                    </div>
+                </div>
+                
+                <!-- Status and Priority -->
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <span class="badge bg-{{ project.status|lower }}">{{ project.get_status_display }}</span>
+                    <span class="badge bg-{{ project.priority|lower }}">{{ project.get_priority_display }}</span>
+                </div>
+                
+                <!-- Project Info -->
+                <div class="row text-muted small">
+                    <div class="col-6">
+                        <i class="bi bi-calendar"></i> Start: {{ project.start_date|date:"M d" }}
+                    </div>
+                    <div class="col-6">
+                        <i class="bi bi-calendar-check"></i> End: {{ project.end_date|date:"M d" }}
+                    </div>
+                </div>
+                
+                {% if project.budget %}
+                <div class="mt-2 text-muted small">
+                    <i class="bi bi-currency-dollar"></i> Budget: ${{ project.budget|floatformat:0 }}
+                </div>
+                {% endif %}
+                
+                <!-- Owner -->
+                <div class="mt-3 pt-3 border-top">
+                    <div class="d-flex align-items-center">
+                        <div class="user-avatar bg-primary text-white d-flex align-items-center justify-content-center me-2">
+                            {{ project.owner.first_name|first|upper }}{{ project.owner.last_name|first|upper }}
+                        </div>
+                        <div>
+                            <small class="text-muted">Owner</small><br>
+                            <small>{{ project.owner.full_name }}</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="card-footer bg-transparent">
+                <div class="d-flex justify-content-between align-items-center">
+                    <small class="text-muted">{{ project.created_at|timesince }} ago</small>
+                    <a href="{% url 'core:project_detail' project.pk %}" class="btn btn-sm btn-outline-primary">
+                        View Details
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+<!-- Pagination -->
+{% if is_paginated %}
+<nav aria-label="Project pagination">
+    <ul class="pagination justify-content-center">
+        {% if page_obj.has_previous %}
+        <li class="page-item">
+            <a class="page-link" href="?page=1{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}{% if request.GET.priority %}&priority={{ request.GET.priority }}{% endif %}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}">
+                <i class="bi bi-chevron-double-left"></i>
+            </a>
+        </li>
+        <li class="page-item">
+            <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}{% if request.GET.priority %}&priority={{ request.GET.priority }}{% endif %}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}">
+                <i class="bi bi-chevron-left"></i>
+            </a>
+        </li>
+        {% endif %}
+        
+        {% for num in page_obj.paginator.page_range %}
+            {% if page_obj.number == num %}
+            <li class="page-item active">
+                <span class="page-link">{{ num }}</span>
+            </li>
+            {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+            <li class="page-item">
+                <a class="page-link" href="?page={{ num }}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}{% if request.GET.priority %}&priority={{ request.GET.priority }}{% endif %}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}">{{ num }}</a>
+            </li>
+            {% endif %}
+        {% endfor %}
+        
+        {% if page_obj.has_next %}
+        <li class="page-item">
+            <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}{% if request.GET.priority %}&priority={{ request.GET.priority }}{% endif %}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}">
+                <i class="bi bi-chevron-right"></i>
+            </a>
+        </li>
+        <li class="page-item">
+            <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}{% if request.GET.priority %}&priority={{ request.GET.priority }}{% endif %}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}">
+                <i class="bi bi-chevron-double-right"></i>
+            </a>
+        </li>
+        {% endif %}
+    </ul>
+</nav>
+{% endif %}
+
+{% else %}
+<!-- Empty State -->
+<div class="text-center py-5">
+    <i class="bi bi-folder-x display-1 text-muted"></i>
+    <h3 class="mt-3">No Projects Found</h3>
+    <p class="text-muted">Get started by creating your first project.</p>
+    <a href="{% url 'core:project_create' %}" class="btn btn-primary">
+        <i class="bi bi-plus-circle"></i> Create Project
+    </a>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Auto-submit form when filters change
+document.getElementById('status').addEventListener('change', function() {
+    this.form.submit();
+});
+
+document.getElementById('priority').addEventListener('change', function() {
+    this.form.submit();
+});
+
+// Search with debounce
+let searchTimeout;
+document.getElementById('search').addEventListener('input', function() {
+    clearTimeout(searchTimeout);
+    searchTimeout = setTimeout(() => {
+        this.form.submit();
+    }, 500);
+});
+</script>
+{% endblock %}

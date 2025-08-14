@@ -1,0 +1,284 @@
+{% extends 'core/base.html' %}
+
+{% block title %}{{ project.title }} - DjangoCraft{% endblock %}
+
+{% block page_title %}{{ project.title }}{% endblock %}
+
+{% block page_actions %}
+<div class="btn-group" role="group">
+    <a href="{% url 'core:task_create' %}?project={{ project.pk }}" class="btn btn-success">
+        <i class="bi bi-plus-circle"></i> Add Task
+    </a>
+    {% if user.role == 'admin' or project.owner == user %}
+    <a href="{% url 'core:project_update' project.pk %}" class="btn btn-primary">
+        <i class="bi bi-pencil"></i> Edit
+    </a>
+    <a href="{% url 'core:project_delete' project.pk %}" class="btn btn-danger">
+        <i class="bi bi-trash"></i> Delete
+    </a>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <!-- Project Overview -->
+    <div class="col-lg-8">
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="bi bi-info-circle"></i> Project Overview</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6>Description</h6>
+                        <p class="text-muted">{{ project.description }}</p>
+                        
+                        <h6>Status & Priority</h6>
+                        <div class="mb-3">
+                            <span class="badge bg-{{ project.status|lower }} me-2">{{ project.get_status_display }}</span>
+                            <span class="badge bg-{{ project.priority|lower }}">{{ project.get_priority_display }}</span>
+                        </div>
+                        
+                        <h6>Timeline</h6>
+                        <div class="row text-muted small">
+                            <div class="col-6">
+                                <i class="bi bi-calendar"></i> Start: {{ project.start_date|date:"M d, Y" }}
+                            </div>
+                            <div class="col-6">
+                                <i class="bi bi-calendar-check"></i> End: {{ project.end_date|date:"M d, Y" }}
+                            </div>
+                        </div>
+                        
+                        {% if project.budget %}
+                        <h6 class="mt-3">Budget</h6>
+                        <p class="text-success fw-bold">${{ project.budget|floatformat:2 }}</p>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="col-md-6">
+                        <h6>Progress</h6>
+                        <div class="mb-3">
+                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                <span class="fw-bold">{{ project.progress }}%</span>
+                                <small class="text-muted">{{ completed_tasks }} of {{ task_count }} tasks</small>
+                            </div>
+                            <div class="progress">
+                                <div class="progress-bar" role="progressbar" style="width: {{ project.progress }}%"></div>
+                            </div>
+                        </div>
+                        
+                        <h6>Task Status</h6>
+                        <div class="row text-center">
+                            <div class="col-4">
+                                <div class="stats-number text-primary">{{ task_count }}</div>
+                                <small class="text-muted">Total</small>
+                            </div>
+                            <div class="col-4">
+                                <div class="stats-number text-success">{{ completed_tasks }}</div>
+                                <small class="text-muted">Completed</small>
+                            </div>
+                            <div class="col-4">
+                                <div class="stats-number text-warning">{{ overdue_tasks }}</div>
+                                <small class="text-muted">Overdue</small>
+                            </div>
+                        </div>
+                        
+                        {% if project.is_overdue %}
+                        <div class="alert alert-warning mt-3">
+                            <i class="bi bi-exclamation-triangle"></i> This project is overdue!
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Tasks -->
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0"><i class="bi bi-list-task"></i> Tasks</h5>
+                <a href="{% url 'core:task_create' %}?project={{ project.pk }}" class="btn btn-sm btn-success">
+                    <i class="bi bi-plus"></i> Add Task
+                </a>
+            </div>
+            <div class="card-body">
+                {% if tasks %}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Task</th>
+                                <th>Assigned To</th>
+                                <th>Status</th>
+                                <th>Priority</th>
+                                <th>Due Date</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for task in tasks %}
+                            <tr>
+                                <td>
+                                    <a href="{% url 'core:task_detail' task.pk %}" class="text-decoration-none">
+                                        {{ task.title }}
+                                    </a>
+                                    {% if task.is_overdue %}
+                                    <i class="bi bi-exclamation-triangle text-warning ms-1" data-bs-toggle="tooltip" title="Overdue"></i>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if task.assigned_to %}
+                                    <div class="d-flex align-items-center">
+                                        <div class="user-avatar bg-primary text-white d-flex align-items-center justify-content-center me-2">
+                                            {{ task.assigned_to.first_name|first|upper }}{{ task.assigned_to.last_name|first|upper }}
+                                        </div>
+                                        <small>{{ task.assigned_to.full_name }}</small>
+                                    </div>
+                                    {% else %}
+                                    <span class="text-muted">Unassigned</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <span class="badge bg-{{ task.status|lower }}">{{ task.get_status_display }}</span>
+                                </td>
+                                <td>
+                                    <span class="badge bg-{{ task.priority|lower }}">{{ task.get_priority_display }}</span>
+                                </td>
+                                <td>
+                                    <small>{{ task.due_date|date:"M d, Y" }}</small>
+                                </td>
+                                <td>
+                                    <div class="btn-group btn-group-sm">
+                                        <a href="{% url 'core:task_detail' task.pk %}" class="btn btn-outline-primary">
+                                            <i class="bi bi-eye"></i>
+                                        </a>
+                                        {% if user.role == 'admin' or task.created_by == user or task.assigned_to == user %}
+                                        <a href="{% url 'core:task_update' task.pk %}" class="btn btn-outline-secondary">
+                                            <i class="bi bi-pencil"></i>
+                                        </a>
+                                        {% endif %}
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="text-center py-4">
+                    <i class="bi bi-list-task display-4 text-muted"></i>
+                    <h6 class="mt-3">No tasks yet</h6>
+                    <p class="text-muted">Create the first task for this project.</p>
+                    <a href="{% url 'core:task_create' %}?project={{ project.pk }}" class="btn btn-primary">
+                        <i class="bi bi-plus-circle"></i> Add Task
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <!-- Sidebar -->
+    <div class="col-lg-4">
+        <!-- Project Owner -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h6 class="mb-0"><i class="bi bi-person"></i> Project Owner</h6>
+            </div>
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="user-avatar bg-primary text-white d-flex align-items-center justify-content-center me-3">
+                        {{ project.owner.first_name|first|upper }}{{ project.owner.last_name|first|upper }}
+                    </div>
+                    <div>
+                        <h6 class="mb-0">{{ project.owner.full_name }}</h6>
+                        <small class="text-muted">{{ project.owner.get_role_display }}</small>
+                        <br>
+                        <small class="text-muted">{{ project.owner.email }}</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Team Members -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h6 class="mb-0"><i class="bi bi-people"></i> Team Members</h6>
+            </div>
+            <div class="card-body">
+                {% if members %}
+                <div class="list-group list-group-flush">
+                    {% for member in members %}
+                    <div class="list-group-item border-0 px-0">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div class="d-flex align-items-center">
+                                <div class="user-avatar bg-secondary text-white d-flex align-items-center justify-content-center me-2">
+                                    {{ member.user.first_name|first|upper }}{{ member.user.last_name|first|upper }}
+                                </div>
+                                <div>
+                                    <small class="fw-bold">{{ member.user.full_name }}</small>
+                                    <br>
+                                    <small class="text-muted">{{ member.get_role_display }}</small>
+                                </div>
+                            </div>
+                            <small class="text-muted">{{ member.joined_at|date:"M d" }}</small>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <p class="text-muted text-center">No team members yet</p>
+                {% endif %}
+            </div>
+        </div>
+        
+        <!-- Project Stats -->
+        <div class="card">
+            <div class="card-header">
+                <h6 class="mb-0"><i class="bi bi-graph-up"></i> Project Statistics</h6>
+            </div>
+            <div class="card-body">
+                <div class="row text-center">
+                    <div class="col-6 mb-3">
+                        <div class="stats-number text-primary">{{ task_count }}</div>
+                        <small class="text-muted">Total Tasks</small>
+                    </div>
+                    <div class="col-6 mb-3">
+                        <div class="stats-number text-success">{{ completed_tasks }}</div>
+                        <small class="text-muted">Completed</small>
+                    </div>
+                    <div class="col-6 mb-3">
+                        <div class="stats-number text-warning">{{ overdue_tasks }}</div>
+                        <small class="text-muted">Overdue</small>
+                    </div>
+                    <div class="col-6 mb-3">
+                        <div class="stats-number text-info">{{ members.count }}</div>
+                        <small class="text-muted">Team Members</small>
+                    </div>
+                </div>
+                
+                <div class="mt-3 pt-3 border-top">
+                    <small class="text-muted">
+                        <i class="bi bi-clock"></i> Created {{ project.created_at|timesince }} ago
+                    </small>
+                    <br>
+                    <small class="text-muted">
+                        <i class="bi bi-arrow-clockwise"></i> Updated {{ project.updated_at|timesince }} ago
+                    </small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Initialize tooltips
+var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+    return new bootstrap.Tooltip(tooltipTriggerEl);
+});
+</script>
+{% endblock %}
