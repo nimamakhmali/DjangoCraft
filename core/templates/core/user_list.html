@@ -1,0 +1,274 @@
+{% extends 'core/base.html' %}
+
+{% block title %}Users - DjangoCraft{% endblock %}
+
+{% block page_title %}Users{% endblock %}
+
+{% block page_actions %}
+{% if user.role == 'admin' %}
+<a href="#" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#addUserModal">
+    <i class="bi bi-person-plus"></i> Add User
+</a>
+{% endif %}
+{% endblock %}
+
+{% block content %}
+<!-- Filters -->
+<div class="card mb-4">
+    <div class="card-body">
+        <form method="get" class="row g-3">
+            <div class="col-md-3">
+                <label for="role" class="form-label">Role</label>
+                <select name="role" id="role" class="form-select">
+                    <option value="">All Roles</option>
+                    <option value="admin" {% if role_filter == 'admin' %}selected{% endif %}>Admin</option>
+                    <option value="project_manager" {% if role_filter == 'project_manager' %}selected{% endif %}>Project Manager</option>
+                    <option value="team_member" {% if role_filter == 'team_member' %}selected{% endif %}>Team Member</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label for="status" class="form-label">Status</label>
+                <select name="status" id="status" class="form-select">
+                    <option value="">All Statuses</option>
+                    <option value="active" {% if status_filter == 'active' %}selected{% endif %}>Active</option>
+                    <option value="inactive" {% if status_filter == 'inactive' %}selected{% endif %}>Inactive</option>
+                </select>
+            </div>
+            <div class="col-md-4">
+                <label for="search" class="form-label">Search</label>
+                <input type="text" name="search" id="search" class="form-control" placeholder="Search by name, email..." value="{{ request.GET.search }}">
+            </div>
+            <div class="col-md-2 d-flex align-items-end">
+                <button type="submit" class="btn btn-primary me-2">
+                    <i class="bi bi-search"></i> Filter
+                </button>
+                <a href="{% url 'core:user_list' %}" class="btn btn-outline-secondary">
+                    <i class="bi bi-arrow-clockwise"></i> Clear
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Users Grid -->
+{% if users %}
+<div class="row">
+    {% for user_obj in users %}
+    <div class="col-lg-4 col-md-6 mb-4">
+        <div class="card h-100">
+            <div class="card-body">
+                <div class="d-flex align-items-center mb-3">
+                    <div class="user-avatar-large bg-primary text-white d-flex align-items-center justify-content-center me-3">
+                        {% if user_obj.avatar %}
+                        <img src="{{ user_obj.avatar.url }}" alt="{{ user_obj.full_name }}" class="rounded-circle" width="60" height="60">
+                        {% else %}
+                        {{ user_obj.first_name|first|upper }}{{ user_obj.last_name|first|upper }}
+                        {% endif %}
+                    </div>
+                    <div class="flex-grow-1">
+                        <h6 class="mb-1">
+                            <a href="{% url 'core:user_detail' user_obj.pk %}" class="text-decoration-none">
+                                {{ user_obj.full_name }}
+                            </a>
+                        </h6>
+                        <small class="text-muted">{{ user_obj.email }}</small>
+                    </div>
+                    {% if user_obj == user %}
+                    <span class="badge bg-success">You</span>
+                    {% endif %}
+                </div>
+                
+                <div class="mb-3">
+                    <span class="badge bg-{{ user_obj.role|lower }} me-1">{{ user_obj.get_role_display }}</span>
+                    {% if user_obj.is_active %}
+                    <span class="badge bg-success">Active</span>
+                    {% else %}
+                    <span class="badge bg-secondary">Inactive</span>
+                    {% endif %}
+                </div>
+                
+                <div class="row text-center mb-3">
+                    <div class="col-4">
+                        <div class="stats-number text-primary">{{ user_obj.owned_projects.count }}</div>
+                        <small class="text-muted">Projects</small>
+                    </div>
+                    <div class="col-4">
+                        <div class="stats-number text-success">{{ user_obj.assigned_tasks.count }}</div>
+                        <small class="text-muted">Tasks</small>
+                    </div>
+                    <div class="col-4">
+                        <div class="stats-number text-info">{{ user_obj.project_memberships.count }}</div>
+                        <small class="text-muted">Teams</small>
+                    </div>
+                </div>
+                
+                <div class="d-flex justify-content-between">
+                    <small class="text-muted">
+                        <i class="bi bi-clock"></i> Joined {{ user_obj.date_joined|timesince }} ago
+                    </small>
+                    <div class="btn-group btn-group-sm">
+                        <a href="{% url 'core:user_detail' user_obj.pk %}" class="btn btn-outline-primary" data-bs-toggle="tooltip" title="View Profile">
+                            <i class="bi bi-eye"></i>
+                        </a>
+                        {% if user.role == 'admin' and user_obj != user %}
+                        <a href="#" class="btn btn-outline-secondary" data-bs-toggle="tooltip" title="Edit User">
+                            <i class="bi bi-pencil"></i>
+                        </a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+<!-- Pagination -->
+{% if is_paginated %}
+<nav aria-label="User pagination" class="mt-4">
+    <ul class="pagination justify-content-center">
+        {% if page_obj.has_previous %}
+        <li class="page-item">
+            <a class="page-link" href="?page=1{% if request.GET.role %}&role={{ request.GET.role }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}">
+                <i class="bi bi-chevron-double-left"></i>
+            </a>
+        </li>
+        <li class="page-item">
+            <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if request.GET.role %}&role={{ request.GET.role }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}">
+                <i class="bi bi-chevron-left"></i>
+            </a>
+        </li>
+        {% endif %}
+        
+        {% for num in page_obj.paginator.page_range %}
+            {% if page_obj.number == num %}
+            <li class="page-item active">
+                <span class="page-link">{{ num }}</span>
+            </li>
+            {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+            <li class="page-item">
+                <a class="page-link" href="?page={{ num }}{% if request.GET.role %}&role={{ request.GET.role }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}">{{ num }}</a>
+            </li>
+            {% endif %}
+        {% endfor %}
+        
+        {% if page_obj.has_next %}
+        <li class="page-item">
+            <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if request.GET.role %}&role={{ request.GET.role }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}">
+                <i class="bi bi-chevron-right"></i>
+            </a>
+        </li>
+        <li class="page-item">
+            <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if request.GET.role %}&role={{ request.GET.role }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}">
+                <i class="bi bi-chevron-double-right"></i>
+            </a>
+        </li>
+        {% endif %}
+    </ul>
+</nav>
+{% endif %}
+
+{% else %}
+<!-- Empty State -->
+<div class="text-center py-5">
+    <i class="bi bi-people display-1 text-muted"></i>
+    <h3 class="mt-3">No Users Found</h3>
+    <p class="text-muted">No users match your current filters.</p>
+    <a href="{% url 'core:user_list' %}" class="btn btn-primary">
+        <i class="bi bi-arrow-clockwise"></i> Clear Filters
+    </a>
+</div>
+{% endif %}
+
+<!-- Add User Modal (Admin Only) -->
+{% if user.role == 'admin' %}
+<div class="modal fade" id="addUserModal" tabindex="-1" aria-labelledby="addUserModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="addUserModalLabel">
+                    <i class="bi bi-person-plus"></i> Add New User
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p class="text-muted">User management is currently handled through Django Admin.</p>
+                <p>To add a new user, please use the Django Admin interface.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <a href="/admin/core/user/add/" class="btn btn-primary" target="_blank">
+                    <i class="bi bi-external-link"></i> Go to Admin
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.user-avatar-large {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    font-size: 1.5rem;
+    font-weight: bold;
+}
+
+.stats-number {
+    font-size: 1.5rem;
+    font-weight: bold;
+}
+
+.card {
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+.badge.bg-admin {
+    background-color: #dc3545;
+}
+
+.badge.bg-project_manager {
+    background-color: #fd7e14;
+}
+
+.badge.bg-team_member {
+    background-color: #6f42c1;
+}
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Auto-submit form when filters change
+document.getElementById('role').addEventListener('change', function() {
+    this.form.submit();
+});
+
+document.getElementById('status').addEventListener('change', function() {
+    this.form.submit();
+});
+
+// Search with debounce
+let searchTimeout;
+document.getElementById('search').addEventListener('input', function() {
+    clearTimeout(searchTimeout);
+    searchTimeout = setTimeout(() => {
+        this.form.submit();
+    }, 500);
+});
+
+// Initialize tooltips
+var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+    return new bootstrap.Tooltip(tooltipTriggerEl);
+});
+</script>
+{% endblock %}
