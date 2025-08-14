@@ -1,6 +1,7 @@
 from django import forms
-from django.contrib.auth import get_user_model
-from .models import Project, Task, TaskComment, TaskAttachment, ProjectMember
+from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
+from django.contrib.auth import authenticate
+from .models import User, Project, Task, TaskComment, TaskAttachment, ProjectMember
 
 User = get_user_model()
 
@@ -214,5 +215,110 @@ class ProjectFilterForm(forms.Form):
         
         if user and user.role == 'admin':
             self.fields['owner'].queryset = User.objects.filter(is_active=True)
+
+class CustomUserCreationForm(UserCreationForm):
+    """Custom user registration form with additional fields"""
+    first_name = forms.CharField(
+        max_length=30,
+        required=True,
+        widget=forms.TextInput(attrs={
+            'class': 'form-control',
+            'placeholder': 'Enter your first name'
+        })
+    )
+    last_name = forms.CharField(
+        max_length=30,
+        required=True,
+        widget=forms.TextInput(attrs={
+            'class': 'form-control',
+            'placeholder': 'Enter your last name'
+        })
+    )
+    email = forms.EmailField(
+        required=True,
+        widget=forms.EmailInput(attrs={
+            'class': 'form-control',
+            'placeholder': 'Enter your email address'
+        })
+    )
+    role = forms.ChoiceField(
+        choices=User.ROLE_CHOICES,
+        initial='team_member',
+        widget=forms.Select(attrs={
+            'class': 'form-select'
+        })
+    )
+    
+    class Meta:
+        model = User
+        fields = ('username', 'first_name', 'last_name', 'email', 'password1', 'password2', 'role')
+    
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['username'].widget.attrs.update({
+            'class': 'form-control',
+            'placeholder': 'Choose a username'
+        })
+        self.fields['password1'].widget.attrs.update({
+            'class': 'form-control',
+            'placeholder': 'Enter your password'
+        })
+        self.fields['password2'].widget.attrs.update({
+            'class': 'form-control',
+            'placeholder': 'Confirm your password'
+        })
+    
+    def clean_email(self):
+        email = self.cleaned_data.get('email')
+        if User.objects.filter(email=email).exists():
+            raise forms.ValidationError('This email address is already in use.')
+        return email
+
+class CustomAuthenticationForm(AuthenticationForm):
+    """Custom login form with better styling"""
+    username = forms.CharField(
+        widget=forms.TextInput(attrs={
+            'class': 'form-control',
+            'placeholder': 'Enter your username'
+        })
+    )
+    password = forms.CharField(
+        widget=forms.PasswordInput(attrs={
+            'class': 'form-control',
+            'placeholder': 'Enter your password'
+        })
+    )
+    remember_me = forms.BooleanField(
+        required=False,
+        initial=False,
+        widget=forms.CheckboxInput(attrs={
+            'class': 'form-check-input'
+        })
+    )
+
+class UserProfileForm(forms.ModelForm):
+    """Form for editing user profile"""
+    class Meta:
+        model = User
+        fields = ('first_name', 'last_name', 'email', 'phone', 'department', 'position', 'bio', 'avatar')
+        widgets = {
+            'first_name': forms.TextInput(attrs={'class': 'form-control'}),
+            'last_name': forms.TextInput(attrs={'class': 'form-control'}),
+            'email': forms.EmailInput(attrs={'class': 'form-control'}),
+            'phone': forms.TextInput(attrs={'class': 'form-control'}),
+            'department': forms.TextInput(attrs={'class': 'form-control'}),
+            'position': forms.TextInput(attrs={'class': 'form-control'}),
+            'bio': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
+            'avatar': forms.FileInput(attrs={'class': 'form-control'}),
+        }
+    
+    def clean_email(self):
+        email = self.cleaned_data.get('email')
+        user_id = self.instance.pk if self.instance else None
+        
+        # Check if email is already used by another user
+        if User.objects.filter(email=email).exclude(pk=user_id).exists():
+            raise forms.ValidationError('This email address is already in use.')
+        return email
 
 
