@@ -1,0 +1,10 @@
+# Database Configuration
+DB_NAME=project_manager_db
+DB_USER=postgres
+DB_PASSWORD=postgres
+DB_HOST=localhost
+DB_PORT=5432
+
+# Django Configuration
+SECRET_KEY=django-insecure-dt#_ds&m9^v71kv2fqg2(k7j50ine8lrhu$if-@lsgooa(m)qk
+DEBUG=True
