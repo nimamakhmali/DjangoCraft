@@ -1,0 +1,323 @@
+{% extends 'core/base.html' %}
+
+{% block title %}Edit Profile - DjangoCraft{% endblock %}
+
+{% block page_title %}Edit Profile{% endblock %}
+
+{% block page_actions %}
+<a href="{% url 'core:user_detail' user.pk %}" class="btn btn-outline-secondary">
+    <i class="bi bi-arrow-left"></i> Back to Profile
+</a>
+{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="bi bi-person-gear"></i> Edit Your Profile
+                </h5>
+            </div>
+            <div class="card-body">
+                <form method="post" enctype="multipart/form-data" novalidate>
+                    {% csrf_token %}
+                    
+                    <!-- Avatar Upload -->
+                    <div class="text-center mb-4">
+                        <div class="position-relative d-inline-block">
+                            <div class="user-avatar-edit bg-primary text-white d-flex align-items-center justify-content-center mx-auto mb-3">
+                                {% if user.avatar %}
+                                <img src="{{ user.avatar.url }}" alt="{{ user.full_name }}" class="rounded-circle" width="100" height="100" id="avatar-preview">
+                                {% else %}
+                                <span id="avatar-text">{{ user.first_name|first|upper }}{{ user.last_name|first|upper }}</span>
+                                {% endif %}
+                            </div>
+                            <label for="{{ form.avatar.id_for_label }}" class="btn btn-sm btn-outline-primary position-absolute bottom-0 end-0" style="cursor: pointer;">
+                                <i class="bi bi-camera"></i>
+                            </label>
+                        </div>
+                        {{ form.avatar }}
+                        {% if form.avatar.errors %}
+                        <div class="invalid-feedback d-block">
+                            {% for error in form.avatar.errors %}
+                            {{ error }}
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+                        <div class="form-text">Upload a profile picture (optional)</div>
+                    </div>
+                    
+                    <div class="row">
+                        <!-- First Name -->
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.first_name.id_for_label }}" class="form-label">
+                                <i class="bi bi-person"></i> First Name *
+                            </label>
+                            {{ form.first_name }}
+                            {% if form.first_name.errors %}
+                            <div class="invalid-feedback d-block">
+                                {% for error in form.first_name.errors %}
+                                {{ error }}
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+                        
+                        <!-- Last Name -->
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.last_name.id_for_label }}" class="form-label">
+                                <i class="bi bi-person"></i> Last Name *
+                            </label>
+                            {{ form.last_name }}
+                            {% if form.last_name.errors %}
+                            <div class="invalid-feedback d-block">
+                                {% for error in form.last_name.errors %}
+                                {{ error }}
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <!-- Email -->
+                    <div class="mb-3">
+                        <label for="{{ form.email.id_for_label }}" class="form-label">
+                            <i class="bi bi-envelope"></i> Email Address *
+                        </label>
+                        {{ form.email }}
+                        {% if form.email.errors %}
+                        <div class="invalid-feedback d-block">
+                            {% for error in form.email.errors %}
+                            {{ error }}
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="row">
+                        <!-- Phone -->
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.phone.id_for_label }}" class="form-label">
+                                <i class="bi bi-telephone"></i> Phone Number
+                            </label>
+                            {{ form.phone }}
+                            {% if form.phone.errors %}
+                            <div class="invalid-feedback d-block">
+                                {% for error in form.phone.errors %}
+                                {{ error }}
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+                        
+                        <!-- Department -->
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.department.id_for_label }}" class="form-label">
+                                <i class="bi bi-building"></i> Department
+                            </label>
+                            {{ form.department }}
+                            {% if form.department.errors %}
+                            <div class="invalid-feedback d-block">
+                                {% for error in form.department.errors %}
+                                {{ error }}
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <!-- Position -->
+                    <div class="mb-3">
+                        <label for="{{ form.position.id_for_label }}" class="form-label">
+                            <i class="bi bi-briefcase"></i> Position
+                        </label>
+                        {{ form.position }}
+                        {% if form.position.errors %}
+                        <div class="invalid-feedback d-block">
+                            {% for error in form.position.errors %}
+                            {{ error }}
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+                    </div>
+                    
+                    <!-- Bio -->
+                    <div class="mb-3">
+                        <label for="{{ form.bio.id_for_label }}" class="form-label">
+                            <i class="bi bi-chat-quote"></i> Bio
+                        </label>
+                        {{ form.bio }}
+                        {% if form.bio.errors %}
+                        <div class="invalid-feedback d-block">
+                            {% for error in form.bio.errors %}
+                            {{ error }}
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+                        <div class="form-text">Tell us a bit about yourself (optional)</div>
+                    </div>
+                    
+                    <!-- Form Errors -->
+                    {% if form.non_field_errors %}
+                    <div class="alert alert-danger">
+                        <i class="bi bi-exclamation-triangle"></i>
+                        {% for error in form.non_field_errors %}
+                        {{ error }}
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                    
+                    <!-- Submit Buttons -->
+                    <div class="d-flex justify-content-between">
+                        <a href="{% url 'core:user_detail' user.pk %}" class="btn btn-outline-secondary">
+                            <i class="bi bi-x-circle"></i> Cancel
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-check-circle"></i> Save Changes
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        
+        <!-- Change Password Card -->
+        <div class="card mt-4">
+            <div class="card-header">
+                <h6 class="mb-0"><i class="bi bi-shield-lock"></i> Change Password</h6>
+            </div>
+            <div class="card-body">
+                <p class="text-muted">To change your password, please use the Django Admin interface or contact your administrator.</p>
+                <a href="/admin/password_change/" class="btn btn-outline-primary" target="_blank">
+                    <i class="bi bi-external-link"></i> Change Password
+                </a>
+            </div>
+        </div>
+        
+        <!-- Account Information -->
+        <div class="card mt-4">
+            <div class="card-header">
+                <h6 class="mb-0"><i class="bi bi-info-circle"></i> Account Information</h6>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <small class="text-muted">Username</small><br>
+                        <strong>{{ user.username }}</strong>
+                    </div>
+                    <div class="col-md-6">
+                        <small class="text-muted">Role</small><br>
+                        <span class="badge bg-{{ user.role|lower }}">{{ user.get_role_display }}</span>
+                    </div>
+                </div>
+                <hr>
+                <div class="row">
+                    <div class="col-md-6">
+                        <small class="text-muted">Date Joined</small><br>
+                        <strong>{{ user.date_joined|date:"F d, Y" }}</strong>
+                    </div>
+                    <div class="col-md-6">
+                        <small class="text-muted">Last Login</small><br>
+                        <strong>{{ user.last_login|date:"F d, Y H:i" }}</strong>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.user-avatar-edit {
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    font-size: 2.5rem;
+    font-weight: bold;
+    position: relative;
+}
+
+.form-control, .form-select {
+    border-radius: 0.5rem;
+    border: 1px solid #dee2e6;
+    padding: 0.75rem;
+    transition: all 0.3s ease;
+}
+
+.form-control:focus, .form-select:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
+}
+
+.form-label {
+    font-weight: 500;
+    color: #495057;
+}
+
+.form-label i {
+    margin-right: 0.5rem;
+    color: var(--primary-color);
+}
+
+/* Hide default file input */
+input[type="file"] {
+    display: none;
+}
+
+/* Textarea styling */
+textarea.form-control {
+    min-height: 100px;
+    resize: vertical;
+}
+
+.badge.bg-admin {
+    background-color: #dc3545;
+}
+
+.badge.bg-project_manager {
+    background-color: #fd7e14;
+}
+
+.badge.bg-team_member {
+    background-color: #6f42c1;
+}
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Avatar preview functionality
+document.getElementById('{{ form.avatar.id_for_label }}').addEventListener('change', function() {
+    const file = this.files[0];
+    if (file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const preview = document.getElementById('avatar-preview');
+            const text = document.getElementById('avatar-text');
+            
+            if (preview) {
+                preview.src = e.target.result;
+            } else if (text) {
+                // Create new image element
+                const img = document.createElement('img');
+                img.src = e.target.result;
+                img.className = 'rounded-circle';
+                img.width = 100;
+                img.height = 100;
+                img.id = 'avatar-preview';
+                
+                text.parentNode.replaceChild(img, text);
+            }
+        };
+        reader.readAsDataURL(file);
+    }
+});
+
+// Initialize tooltips
+var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+    return new bootstrap.Tooltip(tooltipTriggerEl);
+});
+</script>
+{% endblock %}
