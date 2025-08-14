@@ -4,6 +4,12 @@ from . import views
 app_name = 'core'
 
 urlpatterns = [
+    # Authentication URLs
+    path('login/', views.login_view, name='login'),
+    path('register/', views.register_view, name='register'),
+    path('logout/', views.logout_view, name='logout'),
+    path('profile/edit/', views.profile_edit_view, name='profile_edit'),
+    
     # Dashboard
     path('', views.dashboard, name='dashboard'),
     
@@ -21,17 +27,17 @@ urlpatterns = [
     path('tasks/<uuid:pk>/edit/', views.TaskUpdateView.as_view(), name='task_update'),
     path('tasks/<uuid:pk>/delete/', views.TaskDeleteView.as_view(), name='task_delete'),
     
-    # Comment and Attachment URLs
-    path('tasks/<uuid:task_id>/comment/', views.add_comment, name='add_comment'),
-    path('tasks/<uuid:task_id>/attachment/', views.add_attachment, name='add_attachment'),
+    # Task Actions
+    path('tasks/<uuid:pk>/comment/', views.add_comment, name='add_comment'),
+    path('tasks/<uuid:pk>/attachment/', views.add_attachment, name='add_attachment'),
+    path('tasks/<uuid:pk>/status/', views.task_status_update, name='task_status_update'),
     
-    # API URLs for AJAX
-    path('api/tasks/<uuid:task_id>/status/', views.task_status_update, name='task_status_update'),
-    path('api/projects/<uuid:project_id>/progress/', views.project_progress_data, name='project_progress_data'),
+    # API Endpoints
+    path('api/project/<uuid:pk>/progress/', views.project_progress_data, name='project_progress_data'),
     
-    # User Management URLs
+    # User Management
     path('users/', views.user_list, name='user_list'),
-    path('users/<int:user_id>/', views.user_detail, name='user_detail'),
+    path('users/<uuid:pk>/', views.user_detail, name='user_detail'),
 ]
 
 
