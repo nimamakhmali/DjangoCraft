@@ -3,17 +3,21 @@ from django.contrib.auth import get_user_model
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
+from django.contrib.auth import login, logout, authenticate
 from django.contrib import messages
+from django.contrib.auth.views import LogoutView
 from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView
 from django.urls import reverse_lazy, reverse
 from django.db.models import Q, Count, Avg
 from django.utils import timezone
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponseRedirect
 from django.core.paginator import Paginator
 from django.contrib.auth import get_user_model
-from .models import Project, Task, Team, User, ProjectMember, TaskComment, TaskAttachment
-from .forms import ProjectForm, TaskForm, TaskCommentForm, TaskAttachmentForm
+from datetime import datetime, timedelta
 import json
+
+from .models import Project, Task, Team, User, ProjectMember, TaskComment, TaskAttachment, TeamMember
+from .forms import ProjectForm, TaskForm, TaskCommentForm, TaskAttachmentForm, ProjectMemberForm, UserSearchForm, TaskFilterForm, ProjectFilterForm, CustomUserCreationForm, CustomAuthenticationForm, UserProfileForm
 
 
 
@@ -392,6 +396,93 @@ def user_detail(request, user_id):
     }
     
     return render(request, 'core/user_detail.html', context)
+
+
+# Authentication Views
+def login_view(request):
+    """Custom login view"""
+    if request.user.is_authenticated:
+        return redirect('core:dashboard')
+    
+    if request.method == 'POST':
+        form = CustomAuthenticationForm(request, data=request.POST)
+        if form.is_valid():
+            username = form.cleaned_data.get('username')
+            password = form.cleaned_data.get('password')
+            remember_me = form.cleaned_data.get('remember_me')
+            
+            user = authenticate(username=username, password=password)
+            if user is not None:
+                login(request, user)
+                
+                # Handle remember me functionality
+                if not remember_me:
+                    request.session.set_expiry(0)
+                
+                messages.success(request, f'Welcome back, {user.full_name}!')
+                
+                # Redirect to next page or dashboard
+                next_url = request.GET.get('next')
+                if next_url and next_url != '/':
+                    return redirect(next_url)
+                return redirect('core:dashboard')
+            else:
+                messages.error(request, 'Invalid username or password.')
+        else:
+            messages.error(request, 'Please correct the errors below.')
+    else:
+        form = CustomAuthenticationForm()
+    
+    return render(request, 'core/login.html', {'form': form})
+
+def register_view(request):
+    """Custom registration view"""
+    if request.user.is_authenticated:
+        return redirect('core:dashboard')
+    
+    if request.method == 'POST':
+        form = CustomUserCreationForm(request.POST)
+        if form.is_valid():
+            user = form.save(commit=False)
+            user.is_active = True
+            user.save()
+            
+            # Log the user in after registration
+            login(request, user)
+            messages.success(request, f'Welcome to DjangoCraft, {user.full_name}! Your account has been created successfully.')
+            return redirect('core:dashboard')
+        else:
+            messages.error(request, 'Please correct the errors below.')
+    else:
+        form = CustomUserCreationForm()
+    
+    return render(request, 'core/register.html', {'form': form})
+
+@login_required
+def logout_view(request):
+    """Custom logout view"""
+    if request.method == 'POST':
+        logout(request)
+        messages.success(request, 'You have been successfully logged out.')
+        return redirect('core:login')
+    
+    return render(request, 'core/logout.html')
+
+@login_required
+def profile_edit_view(request):
+    """User profile edit view"""
+    if request.method == 'POST':
+        form = UserProfileForm(request.POST, request.FILES, instance=request.user)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Your profile has been updated successfully.')
+            return redirect('core:user_detail', pk=request.user.pk)
+        else:
+            messages.error(request, 'Please correct the errors below.')
+    else:
+        form = UserProfileForm(instance=request.user)
+    
+    return render(request, 'core/user_profile_edit.html', {'form': form})
 
 
 
