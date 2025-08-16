@@ -37,7 +37,7 @@ urlpatterns = [
     
     # User Management
     path('users/', views.user_list, name='user_list'),
-    path('users/<uuid:pk>/', views.user_detail, name='user_detail'),
+    path('users/<int:pk>/', views.user_detail, name='user_detail'),
 ]
 
 
