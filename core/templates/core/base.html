@@ -179,6 +179,7 @@
             </button>
             
             <div class="collapse navbar-collapse" id="navbarNav">
+                {% if user.is_authenticated %}
                 <ul class="navbar-nav me-auto">
                     <li class="nav-item">
                         <a class="nav-link" href="{% url 'core:dashboard' %}">
@@ -201,6 +202,7 @@
                             <i class="bi bi-people"></i> Users
                         </a>
                     </li>
+                    {% endif %}
                 </ul>
                 
                 <!-- User Menu -->
@@ -235,29 +237,27 @@
                             </li>
                         </ul>
                     </li>
-                    {% endif %}
                 </ul>
-                
-                <ul class="navbar-nav">
-                    <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown">
-                            <i class="bi bi-person-circle"></i> {{ user.username }}
+                {% else %}
+                <!-- Login/Register Links -->
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'core:login' %}">
+                            <i class="bi bi-box-arrow-in-right"></i> Login
                         </a>
-                        <ul class="dropdown-menu">
-                            <li><a class="dropdown-item" href="{% url 'core:user_detail' user.id %}">
-                                <i class="bi bi-person"></i> Profile
-                            </a></li>
-                            <li><hr class="dropdown-divider"></li>
-                            <li><a class="dropdown-item" href="{% url 'admin:logout' %}">
-                                <i class="bi bi-box-arrow-right"></i> Logout
-                            </a></li>
-                        </ul>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'core:register' %}">
+                            <i class="bi bi-person-plus"></i> Register
+                        </a>
                     </li>
                 </ul>
+                {% endif %}
             </div>
         </div>
     </nav>
 
+    {% if user.is_authenticated %}
     <div class="container-fluid">
         <div class="row">
             <!-- Sidebar -->
@@ -301,6 +301,10 @@
 
             <!-- Main Content -->
             <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4 main-content">
+    {% else %}
+    <!-- Main Content for non-authenticated users -->
+    <main class="container-fluid">
+    {% endif %}
                 <!-- Messages -->
                 {% if messages %}
                     {% for message in messages %}
@@ -311,6 +315,7 @@
                     {% endfor %}
                 {% endif %}
 
+                {% if user.is_authenticated %}
                 <!-- Page Header -->
                 {% block page_header %}
                 <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
@@ -320,12 +325,15 @@
                     </div>
                 </div>
                 {% endblock %}
+                {% endif %}
 
                 <!-- Main Content -->
                 {% block content %}{% endblock %}
             </main>
+        {% if user.is_authenticated %}
         </div>
     </div>
+        {% endif %}
 
     <!-- Bootstrap 5 JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>

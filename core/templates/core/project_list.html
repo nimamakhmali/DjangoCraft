@@ -90,12 +90,12 @@
                         <small class="text-muted">Tasks</small>
                     </div>
                     <div class="col-4">
-                        <div class="stats-number text-success">{{ project.tasks.filter.status='completed'|length }}</div>
-                        <small class="text-muted">Completed</small>
+                        <div class="stats-number text-success">{{ project.tasks.all|length }}</div>
+                        <small class="text-muted">Total</small>
                     </div>
                     <div class="col-4">
-                        <div class="stats-number text-warning">{{ project.tasks.filter.status='in_progress'|length }}</div>
-                        <small class="text-muted">In Progress</small>
+                        <div class="stats-number text-warning">{{ project.progress }}%</div>
+                        <small class="text-muted">Progress</small>
                     </div>
                 </div>
                 
