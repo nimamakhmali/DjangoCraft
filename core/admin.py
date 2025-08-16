@@ -41,9 +41,7 @@ class ProjectAdmin(admin.ModelAdmin):
         ('Dates & Budget', {
             'fields': ('start_date', 'end_date', 'budget')
         }),
-        ('Members', {
-            'fields': ('members',)
-        }),
+
         ('Metadata', {
             'fields': ('progress', 'is_overdue', 'created_at', 'updated_at'),
             'classes': ('collapse',)

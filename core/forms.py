@@ -1,7 +1,7 @@
 from django import forms
 from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
-from django.contrib.auth import authenticate
-from .models import User, Project, Task, TaskComment, TaskAttachment, ProjectMember
+from django.contrib.auth import authenticate, get_user_model
+from .models import Project, Task, TaskComment, TaskAttachment, ProjectMember
 
 User = get_user_model()
 
@@ -300,14 +300,12 @@ class UserProfileForm(forms.ModelForm):
     """Form for editing user profile"""
     class Meta:
         model = User
-        fields = ('first_name', 'last_name', 'email', 'phone', 'department', 'position', 'bio', 'avatar')
+        fields = ('first_name', 'last_name', 'email', 'phone', 'bio', 'avatar')
         widgets = {
             'first_name': forms.TextInput(attrs={'class': 'form-control'}),
             'last_name': forms.TextInput(attrs={'class': 'form-control'}),
             'email': forms.EmailInput(attrs={'class': 'form-control'}),
             'phone': forms.TextInput(attrs={'class': 'form-control'}),
-            'department': forms.TextInput(attrs={'class': 'form-control'}),
-            'position': forms.TextInput(attrs={'class': 'form-control'}),
             'bio': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
             'avatar': forms.FileInput(attrs={'class': 'form-control'}),
         }
