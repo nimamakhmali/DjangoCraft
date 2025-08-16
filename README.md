@@ -185,13 +185,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ---
 
-## 📞 Support & Community
 
-- **GitHub Issues**: [Report bugs or request features](https://github.com/yourusername/DjangoCraft/issues)
-- **Discussions**: [Join community discussions](https://github.com/yourusername/DjangoCraft/discussions)
-- **Wiki**: [Detailed guides and tutorials](https://github.com/yourusername/DjangoCraft/wiki)
-
----
 
 <div align="center">
 
