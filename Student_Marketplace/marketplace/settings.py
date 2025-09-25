@@ -49,6 +49,7 @@ INSTALLED_APPS = [
     'rest_framework',
     'corsheaders',
     # Local apps
+    'accounts',
     'services',
 ]
 
