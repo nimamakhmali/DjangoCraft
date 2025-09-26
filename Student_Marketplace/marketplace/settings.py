@@ -47,6 +47,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     # Third-party
     'rest_framework',
+    'drf_spectacular',
     'corsheaders',
     # Local apps
     'accounts',
@@ -152,4 +153,11 @@ REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': [
         'rest_framework.permissions.AllowAny',
     ],
+    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
+}
+
+SPECTACULAR_SETTINGS = {
+    'TITLE': 'Student Marketplace API',
+    'DESCRIPTION': 'API documentation for the student-focused services marketplace',
+    'VERSION': '0.1.0',
 }
