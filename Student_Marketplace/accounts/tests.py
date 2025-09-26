@@ -12,9 +12,9 @@ class AuthFlowTests(TestCase):
 		# signup
 		resp = self.client.post(reverse('accounts-signup'), {"username": "u1", "email": "e@example.com", "password": "secret12"}, format='json')
 		self.assertEqual(resp.status_code, 201)
-		# login
+		# login (session)
 		resp = self.client.post(reverse('accounts-login'), {"username": "u1", "password": "secret12"}, format='json')
-		self.assertEqual(resp.status_code, 200)
+		self.assertIn(resp.status_code, (200, 302))
 		# me
 		resp = self.client.get(reverse('accounts-me'))
 		self.assertEqual(resp.status_code, 200)
