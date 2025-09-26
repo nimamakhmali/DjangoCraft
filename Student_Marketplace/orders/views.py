@@ -3,22 +3,25 @@ from django.views.decorators.http import require_POST
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from .models import Order, OrderItem
-from .serializers import OrderSerializer
+from .serializers import OrderSerializer, OrderCreateSerializer
 
 
-@require_POST
+@api_view(["POST"])
 def create_order(request):
-	# naive minimal create: expect JSON with items: [{title, price, qty}]
-	data = request.POST or {}
-	items = data.get('items') or []
+	serializer = OrderCreateSerializer(data=request.data)
+	if not serializer.is_valid():
+		return Response(serializer.errors, status=400)
+	validated = serializer.validated_data
 	order = Order.objects.create()
 	total = 0
-	for item in items:
-		title = item.get('title', 'Untitled')
-		price = item.get('price', 0)
-		qty = int(item.get('qty', 1))
-		OrderItem.objects.create(order=order, service_title=title, unit_price=price, quantity=qty)
-		total += float(price) * qty
+	for item in validated['items']:
+		OrderItem.objects.create(
+			order=order,
+			service_title=item['title'],
+			unit_price=item['price'],
+			quantity=item['qty'],
+		)
+		total += float(item['price']) * item['qty']
 	order.total_amount = total
 	order.save(update_fields=['total_amount'])
 	return Response({"order_id": order.id, "status": order.status, "total": float(order.total_amount)})

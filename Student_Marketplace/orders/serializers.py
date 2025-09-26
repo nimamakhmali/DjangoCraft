@@ -19,3 +19,13 @@ class OrderSerializer(serializers.ModelSerializer):
 	class Meta:
 		model = Order
 		fields = ["id", "status", "total_amount", "created_at", "items"]
+
+
+class OrderCreateItemSerializer(serializers.Serializer):
+	title = serializers.CharField(max_length=150)
+	price = serializers.DecimalField(max_digits=10, decimal_places=2)
+	qty = serializers.IntegerField(min_value=1, default=1)
+
+
+class OrderCreateSerializer(serializers.Serializer):
+	items = OrderCreateItemSerializer(many=True)
