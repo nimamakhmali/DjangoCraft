@@ -3,7 +3,7 @@ from rest_framework.decorators import api_view, permission_classes  # pyright: i
 from rest_framework.permissions import IsAuthenticated, AllowAny  # pyright: ignore[reportMissingImports]
 from rest_framework.response import Response  # pyright: ignore[reportMissingImports]
 from django.contrib.auth import login, logout
-from .serializers import SignupSerializer, LoginSerializer, UserSerializer, ProfileSerializer
+from .serializers import SignupSerializer, LoginSerializer, UserSerializer, ProfileSerializer, PasswordChangeSerializer
 
 
 def ping(_request):
@@ -41,6 +41,19 @@ def me(request):
 	profile_serializer.is_valid(raise_exception=True)
 	profile_serializer.save()
 	return Response(UserSerializer(user).data)
+
+
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
+def password_change(request):
+	serializer = PasswordChangeSerializer(data=request.data)
+	serializer.is_valid(raise_exception=True)
+	user = request.user
+	if not user.check_password(serializer.validated_data['old_password']):
+		return Response({"detail": "old password incorrect"}, status=400)
+	user.set_password(serializer.validated_data['new_password'])
+	user.save(update_fields=['password'])
+	return Response({"detail": "password changed"})
 
 
 @api_view(["POST"])
