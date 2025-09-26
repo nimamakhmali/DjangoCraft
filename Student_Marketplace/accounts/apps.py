@@ -6,4 +6,4 @@ class AccountsConfig(AppConfig):
     name = 'accounts'
 
     def ready(self):
-		from . import signals  # noqa
+        from . import signals  # noqa
