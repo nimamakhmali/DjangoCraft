@@ -2,7 +2,7 @@ from django.http import JsonResponse
 from rest_framework.decorators import api_view, permission_classes  # pyright: ignore[reportMissingImports]
 from rest_framework.permissions import IsAuthenticated, AllowAny  # pyright: ignore[reportMissingImports]
 from rest_framework.response import Response  # pyright: ignore[reportMissingImports]
-from django.contrib.auth import login
+from django.contrib.auth import login, logout
 from .serializers import SignupSerializer, LoginSerializer, UserSerializer, ProfileSerializer
 
 
@@ -41,5 +41,12 @@ def me(request):
 	profile_serializer.is_valid(raise_exception=True)
 	profile_serializer.save()
 	return Response(UserSerializer(user).data)
+
+
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
+def logout_view(request):
+	logout(request)
+	return Response({"detail": "logged out"})
 
 # Create your views here.
