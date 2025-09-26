@@ -15,9 +15,6 @@ class AuthFlowTests(TestCase):
 		# login (session)
 		resp = self.client.post(reverse('accounts-login'), {"username": "u1", "password": "secret12"}, format='json')
 		self.assertIn(resp.status_code, (200, 302))
-		# me
-		resp = self.client.get(reverse('accounts-me'))
-		self.assertEqual(resp.status_code, 200)
 		# password change
 		resp = self.client.post(reverse('accounts-password-change'), {"old_password": "secret12", "new_password": "secret34"}, format='json')
 		self.assertEqual(resp.status_code, 200)
@@ -25,6 +22,11 @@ class AuthFlowTests(TestCase):
 		resp = self.client.post(reverse('token_obtain_pair'), {"username": "u1", "password": "secret34"}, format='json')
 		self.assertEqual(resp.status_code, 200)
 		self.assertIn('access', resp.data)
+		# use JWT to access me
+		access = resp.data['access']
+		self.client.credentials(HTTP_AUTHORIZATION=f'Bearer {access}')
+		resp = self.client.get(reverse('accounts-me'))
+		self.assertEqual(resp.status_code, 200)
 		# verify email send/confirm
 		resp = self.client.post(reverse('accounts-verify-send'))
 		self.assertEqual(resp.status_code, 200)
