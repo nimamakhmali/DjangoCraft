@@ -12,6 +12,8 @@ class Profile(models.Model):
 		('admin', 'Admin'),
 	]
 	role = models.CharField(max_length=30, choices=ROLE_CHOICES, default='student')
+	email_verified = models.BooleanField(default=False, null=True, blank=True)
+	verification_token = models.CharField(max_length=64, blank=True)
 	created_at = models.DateTimeField(auto_now_add=True)
 
 	def __str__(self) -> str:

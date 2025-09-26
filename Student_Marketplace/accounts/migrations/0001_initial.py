@@ -20,6 +20,7 @@ class Migration(migrations.Migration):
                 ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('bio', models.TextField(blank=True)),
                 ('skills', models.TextField(blank=True)),
+                ('role', models.CharField(choices=[('student', 'Student'), ('freelancer', 'Freelancer'), ('admin', 'Admin')], default='student', max_length=30)),
                 ('created_at', models.DateTimeField(auto_now_add=True)),
                 ('user', models.OneToOneField(on_delete=django.db.models.deletion.CASCADE, related_name='profile', to=settings.AUTH_USER_MODEL)),
             ],
