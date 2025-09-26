@@ -42,7 +42,7 @@ class LoginSerializer(serializers.Serializer):
 		if not user:
 			raise serializers.ValidationError("Invalid credentials")
 		attrs["user"] = user
-        return attrs
+		return attrs
 
 
 class PasswordChangeSerializer(serializers.Serializer):

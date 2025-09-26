@@ -27,7 +27,9 @@ def list_services_db(_request):
 @api_view(["POST"])
 @permission_classes([IsAuthenticated])
 def create_service(request):
-	# Minimal create guarded by auth; in next steps we can require freelancer role
+	# Require freelancer role to create a service
+	if not hasattr(request.user, 'profile') or request.user.profile.role != 'freelancer':
+		return Response({"detail": "Only freelancers can create services"}, status=403)
 	serializer = ServiceSerializer(data=request.data)
 	serializer.is_valid(raise_exception=True)
 	service = serializer.save()
