@@ -26,18 +26,13 @@ class Conversation(models.Model):
 	def __str__(self):
 		return f"Conversation {self.conversation_id} - {self.title or 'Untitled'}"
 	
-	@property
-	def other_participant(self, user):
+	def get_other_participant(self, user):
 		"""Get the other participant in the conversation"""
 		return self.participants.exclude(id=user.id).first()
-	
-	@property
-	def unread_count(self, user):
-		"""Get unread message count for a user"""
-		return self.messages.filter(
-			sender__ne=user,
-			read_at__isnull=True
-		).count()
+
+	def get_unread_count(self, user):
+		"""Get unread message count for a user (messages from others without a read status)"""
+		return self.messages.exclude(sender=user).exclude(read_statuses__user=user).count()
 
 
 class Message(models.Model):

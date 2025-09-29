@@ -1,8 +1,9 @@
-from rest_framework.decorators import api_view, permission_classes
+from rest_framework.decorators import api_view, permission_classes, parser_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.pagination import PageNumberPagination
+from rest_framework.parsers import MultiPartParser, FormParser, JSONParser
 from django.db.models import Q, F, Count
 from django.db import models
 from django.utils import timezone
@@ -103,10 +104,10 @@ def conversation_detail(request, conversation_id):
 	paginator = MessagePagination()
 	page = paginator.paginate_queryset(messages, request)
 	
-	# Mark messages as read
-	unread_messages = conversation.messages.filter(
+	# Mark messages as read (those without a read status for this user)
+	unread_messages = conversation.messages.exclude(sender=request.user).exclude(
 		read_statuses__user=request.user
-	).exclude(sender=request.user)
+	)
 	
 	for message in unread_messages:
 		MessageReadStatus.objects.get_or_create(
@@ -125,6 +126,7 @@ def conversation_detail(request, conversation_id):
 
 @api_view(["POST"])
 @permission_classes([IsAuthenticated])
+@parser_classes([MultiPartParser, FormParser, JSONParser])
 def message_send(request, conversation_id):
 	"""Send a message in a conversation"""
 	try:
@@ -140,11 +142,15 @@ def message_send(request, conversation_id):
 	serializer.is_valid(raise_exception=True)
 	
 	# Create message
+	validated = serializer.validated_data
 	message = Message.objects.create(
 		conversation=conversation,
 		sender=request.user,
-		content=serializer.validated_data['content'],
-		message_type=serializer.validated_data['message_type']
+		content=validated.get('content', ''),
+		message_type=validated['message_type'],
+		attachment=validated.get('attachment'),
+		attachment_name=validated.get('attachment_name') or (validated.get('attachment').name if validated.get('attachment') else ''),
+		attachment_size=(validated.get('attachment').size if validated.get('attachment') else None),
 	)
 	
 	# Update conversation last_message_at

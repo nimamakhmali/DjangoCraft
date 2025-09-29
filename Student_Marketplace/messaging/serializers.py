@@ -30,13 +30,32 @@ class MessageSerializer(serializers.ModelSerializer):
 
 
 class MessageCreateSerializer(serializers.Serializer):
-	content = serializers.CharField(max_length=5000)
+	content = serializers.CharField(max_length=5000, required=False, allow_blank=True)
 	message_type = serializers.ChoiceField(choices=Message.MESSAGE_TYPE_CHOICES, default=Message.MESSAGE_TYPE_TEXT)
+	attachment = serializers.FileField(required=False, allow_empty_file=False)
+	attachment_name = serializers.CharField(max_length=255, required=False, allow_blank=True)
 	
-	def validate_content(self, value):
-		if not value.strip():
-			raise serializers.ValidationError("Message content cannot be empty")
-		return value.strip()
+	def validate(self, attrs):
+		message_type = attrs.get('message_type')
+		content = attrs.get('content', '').strip() if attrs.get('content') is not None else ''
+		attachment = attrs.get('attachment')
+		
+		if message_type == Message.MESSAGE_TYPE_TEXT:
+			if not content:
+				raise serializers.ValidationError({
+					'content': 'Message content cannot be empty for text messages'
+				})
+		elif message_type == Message.MESSAGE_TYPE_FILE:
+			if not attachment:
+				raise serializers.ValidationError({
+					'attachment': 'Attachment is required for file messages'
+				})
+		else:
+			# system messages are created by backend logic only; block here for API
+			raise serializers.ValidationError({'message_type': 'Unsupported message type'})
+		
+		attrs['content'] = content
+		return attrs
 
 
 class ConversationSerializer(serializers.ModelSerializer):
@@ -67,9 +86,7 @@ class ConversationSerializer(serializers.ModelSerializer):
 	def get_unread_count(self, obj):
 		request = self.context.get('request')
 		if request and request.user.is_authenticated:
-			return obj.messages.filter(
-				read_statuses__user=request.user
-			).exclude(sender=request.user).count()
+			return obj.messages.exclude(sender=request.user).exclude(read_statuses__user=request.user).count()
 		return 0
 	
 	def get_last_message(self, obj):
@@ -151,9 +168,7 @@ class ConversationListSerializer(serializers.ModelSerializer):
 	def get_unread_count(self, obj):
 		request = self.context.get('request')
 		if request and request.user.is_authenticated:
-			return obj.messages.filter(
-				read_statuses__user=request.user
-			).exclude(sender=request.user).count()
+			return obj.messages.exclude(sender=request.user).exclude(read_statuses__user=request.user).count()
 		return 0
 	
 	def get_last_message_preview(self, obj):
