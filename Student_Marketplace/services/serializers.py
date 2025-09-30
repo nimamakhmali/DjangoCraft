@@ -11,5 +11,5 @@ class CategorySerializer(serializers.ModelSerializer):
 class ServiceSerializer(serializers.ModelSerializer):
 	class Meta:
 		model = Service
-		fields = ["id", "title", "description", "price", "category", "created_at"]
+		fields = ["id", "title", "description", "price", "category", "status", "approved_at", "created_at"]
 		read_only_fields = ["created_at"]

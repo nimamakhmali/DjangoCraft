@@ -6,6 +6,9 @@ from rest_framework.decorators import permission_classes
 from rest_framework import status
 from django.db.models import Q
 from django.core.paginator import Paginator
+from django.db.models import Sum
+from django.contrib.auth.decorators import user_passes_test
+from django.contrib.auth.models import User
 from .models import Category, Service
 from .serializers import CategorySerializer, ServiceSerializer
 
@@ -23,7 +26,7 @@ def list_categories(_request):
 
 @api_view(["GET"])
 def list_services_db(_request):
-	services = Service.objects.select_related("category").all()
+	services = Service.objects.select_related("category").filter(status=Service.STATUS_APPROVED)
 	return Response({"services": ServiceSerializer(services, many=True).data})
 
 
@@ -68,7 +71,7 @@ def service_detail(request, service_id):
 @api_view(["GET"])
 def services_search(request):
 	# Search and filter services
-	queryset = Service.objects.select_related('category').all()
+	queryset = Service.objects.select_related('category').filter(status=Service.STATUS_APPROVED)
 	
 	# Filter by category
 	category_id = request.GET.get('category')
@@ -107,3 +110,38 @@ def services_search(request):
 		'has_next': page_obj.has_next(),
 		'has_previous': page_obj.has_previous(),
 	})
+
+
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+def admin_summary(request):
+	# Staff-only guard
+	if not request.user.is_staff:
+		return Response({"detail": "Admins only"}, status=403)
+
+	services_qs = Service.objects.all()
+	data = {
+		"users_total": User.objects.count(),
+		"services_total": services_qs.count(),
+		"services_pending": services_qs.filter(status=Service.STATUS_PENDING).count(),
+		"services_approved": services_qs.filter(status=Service.STATUS_APPROVED).count(),
+		"services_rejected": services_qs.filter(status=Service.STATUS_REJECTED).count(),
+	}
+
+	try:
+		from payments.models import Payment
+		revenue = Payment.objects.filter(status=Payment.STATUS_COMPLETED).aggregate(total=Sum('amount'))['total'] or 0
+		data.update({
+			"payments_total": Payment.objects.count(),
+			"payments_completed": Payment.objects.filter(status=Payment.STATUS_COMPLETED).count(),
+			"revenue_total": float(revenue),
+		})
+	except Exception:
+		# payments app may not be fully configured
+		data.update({
+			"payments_total": 0,
+			"payments_completed": 0,
+			"revenue_total": 0.0,
+		})
+
+	return Response(data)
