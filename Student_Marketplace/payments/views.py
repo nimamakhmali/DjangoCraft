@@ -3,6 +3,9 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework import status
 from django.utils import timezone
+from django.conf import settings
+from django.views.decorators.csrf import csrf_exempt
+import stripe
 import uuid
 import random
 from .models import Payment
@@ -12,46 +15,80 @@ from .serializers import PaymentSerializer, PaymentCreateSerializer, PaymentConf
 @api_view(["POST"])
 @permission_classes([IsAuthenticated])
 def initiate_payment(request):
-	"""Initiate a payment for an order (Mock implementation)"""
+	"""Initiate a payment for an order (Stripe test-mode or mock)"""
 	serializer = PaymentCreateSerializer(data=request.data)
 	serializer.is_valid(raise_exception=True)
-	
+
 	order_id = serializer.validated_data['order_id']
 	payment_method = serializer.validated_data['payment_method']
-	
+
 	# Get the order
 	from orders.models import Order
 	order = Order.objects.get(pk=order_id)
-	
+
 	# Create payment record
 	payment = Payment.objects.create(
 		order=order,
 		user=request.user,
 		amount=order.total_amount,
 		currency='USD',
-		gateway='mock',
+		gateway='stripe' if settings.env.bool('STRIPE_ENABLED', default=False) else 'mock',
 		payment_method=payment_method,
 		status=Payment.STATUS_PENDING
 	)
-	
-	# Mock gateway response
-	payment.external_id = f"mock_{payment.payment_id.hex[:8]}"
-	payment.gateway_response = {
-		"gateway": "mock",
-		"status": "initiated",
-		"redirect_url": f"/mock-payment/{payment.payment_id}/",
-		"confirmation_code": f"CONF_{random.randint(1000, 9999)}"
-	}
-	payment.save()
-	
-	return Response({
+
+	if payment.gateway == 'stripe':
+		stripe.api_key = settings.env('STRIPE_SECRET_KEY', default='')
+		try:
+			session = stripe.checkout.Session.create(
+				payment_method_types=['card'],
+				mode='payment',
+				line_items=[{
+					'price_data': {
+						'currency': payment.currency.lower(),
+						'product_data': {'name': f"Order #{order.id}"},
+						'unit_amount': int(float(payment.amount) * 100),
+					},
+					'quantity': 1,
+				}],
+				success_url=settings.env('STRIPE_SUCCESS_URL', default='http://localhost:8000/success') + '?session_id={CHECKOUT_SESSION_ID}',
+				cancel_url=settings.env('STRIPE_CANCEL_URL', default='http://localhost:8000/cancel'),
+				metadata={'payment_id': str(payment.payment_id), 'order_id': str(order.id)},
+			)
+			payment.external_id = session.id
+			payment.gateway_response = {'checkout_session_id': session.id}
+			payment.save(update_fields=['external_id', 'gateway_response'])
+		except Exception as e:
+			payment.status = Payment.STATUS_FAILED
+			payment.gateway_response = {'error': str(e)}
+			payment.save(update_fields=['status', 'gateway_response'])
+			return Response({"detail": "Stripe error", "error": str(e)}, status=400)
+	else:
+		# Mock gateway response
+		payment.external_id = f"mock_{payment.payment_id.hex[:8]}"
+		payment.gateway_response = {
+			"gateway": "mock",
+			"status": "initiated",
+			"redirect_url": f"/mock-payment/{payment.payment_id}/",
+			"confirmation_code": f"CONF_{random.randint(1000, 9999)}"
+		}
+		payment.save()
+
+	payload = {
 		"payment_id": str(payment.payment_id),
 		"amount": float(payment.amount),
 		"currency": payment.currency,
 		"status": payment.status,
-		"redirect_url": payment.gateway_response["redirect_url"],
-		"confirmation_code": payment.gateway_response["confirmation_code"]
-	}, status=status.HTTP_201_CREATED)
+		"gateway": payment.gateway,
+	}
+	if payment.gateway == 'stripe':
+		payload.update({"checkout_session_id": payment.external_id})
+	else:
+		payload.update({
+			"redirect_url": payment.gateway_response["redirect_url"],
+			"confirmation_code": payment.gateway_response["confirmation_code"],
+		})
+	return Response(payload, status=status.HTTP_201_CREATED)
 
 
 @api_view(["POST"])
@@ -120,8 +157,33 @@ def payment_status(request, payment_id):
 
 
 @api_view(["POST"])
+@csrf_exempt
 def mock_webhook(request):
-	"""Mock webhook endpoint for testing payment callbacks"""
+	"""Webhook endpoint (Stripe when enabled, otherwise mock)"""
+	if settings.env.bool('STRIPE_ENABLED', default=False):
+		stripe.api_key = settings.env('STRIPE_SECRET_KEY', default='')
+		sig_header = request.META.get('HTTP_STRIPE_SIGNATURE', '')
+		payload = request.body
+		endpoint_secret = settings.env('STRIPE_WEBHOOK_SECRET', default='')
+		try:
+			event = stripe.Webhook.construct_event(payload=payload, sig_header=sig_header, secret=endpoint_secret)
+		except Exception as e:
+			return Response({"detail": "Invalid webhook", "error": str(e)}, status=400)
+		if event['type'] == 'checkout.session.completed':
+			session = event['data']['object']
+			payment_id = session.get('metadata', {}).get('payment_id')
+			try:
+				payment = Payment.objects.get(payment_id=payment_id)
+			except Payment.DoesNotExist:
+				return Response(status=200)
+			payment.status = Payment.STATUS_COMPLETED
+			payment.completed_at = timezone.now()
+			payment.order.status = payment.order.STATUS_PAID
+			payment.order.save(update_fields=['status'])
+			payment.save()
+		return Response(status=200)
+
+    # Mock branch
 	# This simulates a webhook from a payment gateway
 	payment_id = request.data.get('payment_id')
 	webhook_status = request.data.get('status')  # 'completed', 'failed', etc.
