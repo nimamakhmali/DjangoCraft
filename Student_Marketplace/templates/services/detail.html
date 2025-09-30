@@ -1,0 +1,37 @@
+{% extends 'base.html' %}
+{% block title %}Service - Student Marketplace{% endblock %}
+{% block content %}
+  <div id="box" class="bg-white border rounded p-4"></div>
+  <script>
+    (async function(){
+      const id = new URLSearchParams(location.search).get('id');
+      if (!id) { document.getElementById('box').innerHTML='Missing id'; return }
+      const r = await fetch('/api/services/' + id + '/');
+      if (!r.ok) { document.getElementById('box').innerHTML='Not found'; return }
+      const s = await r.json();
+      const el = document.getElementById('box');
+      el.innerHTML = `
+        <h1 class="text-xl font-semibold mb-2">${s.title}</h1>
+        <p class="text-gray-600 mb-3">${s.description || ''}</p>
+        <div class="font-semibold mb-4">$${s.price}</div>
+        <button id="buyBtn" class="px-4 py-2 rounded border">Quick Buy</button>
+      `;
+      document.getElementById('buyBtn').addEventListener('click', buy);
+      async function buy(){
+        try {
+          const orderRes = await fetch('/api/orders/create/', { method:'POST', headers:{ 'Content-Type':'application/json' }, body: JSON.stringify({ items: [{ title: s.title, price: s.price, qty: 1 }] }) });
+          if (!orderRes.ok) { alert('Order failed'); return }
+          const order = await orderRes.json();
+          const payRes = await fetch('/api/payments/initiate/', { method:'POST', headers:{ 'Content-Type':'application/json' }, body: JSON.stringify({ order_id: order.order_id, payment_method: 'mock' }) });
+          const pay = await payRes.json();
+          const code = prompt('Enter confirmation code (mock):', pay.confirmation_code || '');
+          if (code) {
+            await fetch('/api/payments/confirm/', { method:'POST', headers:{ 'Content-Type':'application/json' }, body: JSON.stringify({ payment_id: pay.payment_id, confirmation_code: code }) });
+            alert('Payment completed');
+          }
+        } catch(e) { alert('Purchase failed') }
+      }
+    })();
+  </script>
+{% endblock %}
+

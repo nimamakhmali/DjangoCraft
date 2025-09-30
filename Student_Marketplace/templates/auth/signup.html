@@ -1,0 +1,27 @@
+{% extends 'base.html' %}
+{% block title %}Signup - Student Marketplace{% endblock %}
+{% block content %}
+  <h1 class="text-xl font-semibold mb-4">Signup</h1>
+  <form id="signupForm" class="bg-white border rounded p-4 max-w-sm">
+    <label class="block text-sm mb-1">Username</label>
+    <input name="username" class="w-full border rounded px-3 py-2 mb-3" required />
+    <label class="block text-sm mb-1">Email (optional)</label>
+    <input name="email" type="email" class="w-full border rounded px-3 py-2 mb-3" />
+    <label class="block text-sm mb-1">Password</label>
+    <input type="password" name="password" class="w-full border rounded px-3 py-2 mb-4" required />
+    <button class="px-4 py-2 rounded bg-blue-600 text-white">Create account</button>
+  </form>
+  <script>
+    const form = document.getElementById('signupForm');
+    form.addEventListener('submit', async (e)=>{
+      e.preventDefault();
+      const fd = new FormData(form);
+      const payload = { username: fd.get('username'), email: fd.get('email'), password: fd.get('password') };
+      const r = await fetch('/api/accounts/signup/', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+      if (!r.ok) { alert('Signup failed'); return; }
+      alert('Signup successful. Please login.');
+      location.href = '/auth/login/';
+    });
+  </script>
+{% endblock %}
+

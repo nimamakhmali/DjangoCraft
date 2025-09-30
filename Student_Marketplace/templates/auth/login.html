@@ -1,0 +1,26 @@
+{% extends 'base.html' %}
+{% block title %}Login - Student Marketplace{% endblock %}
+{% block content %}
+  <h1 class="text-xl font-semibold mb-4">Login</h1>
+  <form id="loginForm" class="bg-white border rounded p-4 max-w-sm">
+    <label class="block text-sm mb-1">Username</label>
+    <input name="username" class="w-full border rounded px-3 py-2 mb-3" required />
+    <label class="block text-sm mb-1">Password</label>
+    <input type="password" name="password" class="w-full border rounded px-3 py-2 mb-4" required />
+    <button class="px-4 py-2 rounded bg-blue-600 text-white">Login</button>
+  </form>
+  <script>
+    const form = document.getElementById('loginForm');
+    form.addEventListener('submit', async (e)=>{
+      e.preventDefault();
+      const fd = new FormData(form);
+      const payload = { username: fd.get('username'), password: fd.get('password') };
+      const r = await fetch('/api/accounts/token/', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+      if (!r.ok) { alert('Login failed'); return; }
+      const data = await r.json();
+      localStorage.setItem('auth_token', data.access);
+      location.href = '/';
+    });
+  </script>
+{% endblock %}
+

@@ -16,6 +16,8 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
+from django.views.generic import TemplateView
+from services.views import services_page
 from django.conf import settings
 from django.conf.urls.static import static
 from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView, SpectacularRedocView
@@ -26,6 +28,7 @@ def healthcheck_view(_request):
     return JsonResponse({"status": "ok"})
 
 urlpatterns = [
+    path('', TemplateView.as_view(template_name='index.html'), name='home'),
     path('admin/', admin.site.urls),
     path('health/', healthcheck_view, name='health'),
     path('api/services/', include('services.urls')),
@@ -38,6 +41,14 @@ urlpatterns = [
     path('api/schema/', SpectacularAPIView.as_view(), name='schema'),
     path('api/docs/', SpectacularSwaggerView.as_view(url_name='schema'), name='swagger-ui'),
     path('api/redoc/', SpectacularRedocView.as_view(url_name='schema'), name='redoc'),
+    # Auth pages
+    path('auth/login/', TemplateView.as_view(template_name='auth/login.html'), name='login-page'),
+    path('auth/signup/', TemplateView.as_view(template_name='auth/signup.html'), name='signup-page'),
+    # Messaging page
+    path('messaging/', TemplateView.as_view(template_name='messaging/inbox.html'), name='messaging-inbox'),
+    # Public pages
+    path('services/', services_page, name='services-public-list'),
+    path('services/detail/', TemplateView.as_view(template_name='services/detail.html'), name='services-public-detail'),
 ]
 
 if settings.DEBUG:
