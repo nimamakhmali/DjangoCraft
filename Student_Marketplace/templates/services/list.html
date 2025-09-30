@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1" />
+	<title>Services</title>
+	<style>
+		body { font-family: system-ui, Arial; margin: 16px; }
+		.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 16px; }
+		.card { border: 1px solid #e5e7eb; border-radius: 8px; padding: 12px; }
+		.price { font-weight: 700; color: #111827; }
+		.badge { font-size: 12px; background: #e0f2fe; color: #0ea5e9; padding: 2px 8px; border-radius: 999px; }
+		@media (max-width: 640px) { .grid { grid-template-columns: 1fr; } }
+	</style>
+</head>
+<body>
+	<h1>Approved Services</h1>
+	<div class="grid">
+		{% for s in services %}
+		<div class="card">
+			<div class="badge">{{ s.category.name if s.category }}</div>
+			<h3>{{ s.title }}</h3>
+			<p>{{ s.description|default:"No description"|truncatechars:120 }}</p>
+			<div class="price">${{ s.price }}</div>
+		</div>
+		{% empty %}
+		<p>No services yet.</p>
+		{% endfor %}
+	</div>
+</body>
+</html>
+

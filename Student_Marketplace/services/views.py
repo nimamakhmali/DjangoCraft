@@ -1,4 +1,4 @@
-from django.http import JsonResponse
+from django.shortcuts import render
 from rest_framework.response import Response
 from rest_framework.decorators import api_view
 from rest_framework.permissions import IsAuthenticated
@@ -118,7 +118,7 @@ def admin_summary(request):
 	# Staff-only guard
 	if not request.user.is_staff:
 		return Response({"detail": "Admins only"}, status=403)
-
+	
 	services_qs = Service.objects.all()
 	data = {
 		"users_total": User.objects.count(),
@@ -127,7 +127,7 @@ def admin_summary(request):
 		"services_approved": services_qs.filter(status=Service.STATUS_APPROVED).count(),
 		"services_rejected": services_qs.filter(status=Service.STATUS_REJECTED).count(),
 	}
-
+	
 	try:
 		from payments.models import Payment
 		revenue = Payment.objects.filter(status=Payment.STATUS_COMPLETED).aggregate(total=Sum('amount'))['total'] or 0
@@ -143,5 +143,16 @@ def admin_summary(request):
 			"payments_completed": 0,
 			"revenue_total": 0.0,
 		})
-
+	
 	return Response(data)
+
+
+def services_page(request):
+	services = Service.objects.select_related('category').filter(status=Service.STATUS_APPROVED)[:50]
+	return render(request, 'services/list.html', {"services": services})
+
+
+def admin_dashboard_page(request):
+	if not request.user.is_staff:
+		return render(request, '403.html', status=403)
+	return render(request, 'admin/dashboard.html')

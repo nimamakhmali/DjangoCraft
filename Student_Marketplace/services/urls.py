@@ -1,5 +1,5 @@
 from django.urls import path
-from .views import list_services, list_categories, list_services_db, create_service, service_detail, services_search, admin_summary
+from .views import list_services, list_categories, list_services_db, create_service, service_detail, services_search, admin_summary, services_page, admin_dashboard_page
 
 urlpatterns = [
 	path('', list_services, name='services-list'),
@@ -10,4 +10,7 @@ urlpatterns = [
 	path('<int:service_id>/', service_detail, name='services-detail'),
 	# admin/reporting
 	path('admin/summary/', admin_summary, name='services-admin-summary'),
+	# basic pages
+	path('page/', services_page, name='services-page'),
+	path('admin/dashboard/', admin_dashboard_page, name='services-admin-dashboard'),
 ]

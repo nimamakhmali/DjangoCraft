@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1" />
+	<title>Admin Dashboard</title>
+	<style>
+		body { font-family: system-ui, Arial; margin: 16px; }
+		.grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; }
+		.card { border: 1px solid #e5e7eb; border-radius: 8px; padding: 12px; }
+		.hint { color: #6b7280; }
+	</style>
+</head>
+<body>
+	<h1>Admin Dashboard</h1>
+	<p class="hint">Use the API endpoint <code>/api/services/admin/summary/</code> for live stats.</p>
+	<div class="grid">
+		<div class="card">Users, Services, Payments overview is available via API.</div>
+		<div class="card">Approve or reject services in Django Admin.</div>
+	</div>
+</body>
+</html>
+
